@@ -2,7 +2,11 @@
 
 Autonomous RL post-training research. Give an AI agent a real RL training setup and let it experiment autonomously overnight. It modifies the config, trains for 10 minutes, checks if the result improved, keeps or discards, and repeats.
 
-Inspired by [autoresearch](https://github.com/karpathy/autoresearch) (pretraining), this applies the same philosophy to **RL post-training** using [prime-rl](https://github.com/PrimeIntellect-ai/prime-rl) and [verifiers](https://github.com/PrimeIntellect-ai/verifiers).
+The idea is simple: instead of a human sitting around tweaking hyperparameters, let an AI agent do it. The agent reads the current config, proposes a change (learning rate, batch size, loss masking, regularization, etc.), runs a full training loop, evaluates, and decides whether to keep or discard the result. Over dozens of experiments it systematically explores the search space and converges on a strong configuration — all without human intervention.
+
+Inspired by [autoresearch](https://github.com/karpathy/autoresearch) (pretraining), this applies the same philosophy to **RL post-training** using [prime-rl](https://github.com/PrimeIntellect-ai/prime-rl) — my favourite RL post-training framework — and [verifiers](https://github.com/PrimeIntellect-ai/verifiers).
+
+Shoutout to [@willccbb](https://x.com/willccbb) for creating verifiers and making RL reward verification actually usable.
 
 ## Progress
 
@@ -50,7 +54,7 @@ Hi have a look at program.md and let's kick off a new experiment! let's do the s
 - **Single file to modify.** The agent only touches `train.toml`. Diffs are easy to review.
 - **Fixed time budget.** Training always runs for 10 minutes, making experiments directly comparable.
 - **2-GPU setup.** GPU 0 runs vLLM inference, GPU 1 runs the RL trainer. No memory contention.
-- **Multiple environments.** GSM8K + Hendrycks MATH by default. Composite metric prevents overfitting to one task.
+- **Multiple environments.** GSM8K by default. Composite metric prevents overfitting to one task.
 - **Built on prime-rl.** Production-ready async RL framework with GRPO/IPO/DPPO support.
 
 ## License
