@@ -178,36 +178,45 @@ def extract_metrics_from_logs(output_dir):
     orch_log = log_dir / "orchestrator.stdout"
     if orch_log.exists():
         text = orch_log.read_text(errors="replace")
-        # Extract eval metrics
-        eval_pattern = r"eval/(\w+)/pass@1[:\s]+([0-9.]+)"
+        # Extract eval metrics from orchestrator log
+        # Format: "Evaluated gsm8k in 14.78s (Avg@1=0.4900, Pass@1: 0.4900, ...)"
+        eval_pattern = r"Evaluated (\w+) in [0-9.]+s \(Avg@1=([0-9.]+), Pass@1: ([0-9.]+)"
         eval_matches = re.findall(eval_pattern, text)
         if eval_matches:
+            # Use the last eval results (final eval)
             pass1_scores = {}
-            for env_name, score in eval_matches:
-                pass1_scores[env_name] = float(score)
+            for env_name, avg_score, pass1_score in eval_matches:
+                pass1_scores[env_name] = float(pass1_score)
             metrics["per_env_pass1"] = pass1_scores
             if pass1_scores:
                 metrics["eval_score"] = sum(pass1_scores.values()) / len(pass1_scores)
 
-        # Extract reward mean
-        reward_pattern = r"reward\.mean[:\s]+([0-9.]+)"
+        # Extract reward mean from step logs
+        # Format: "Step 0 | Time: 16.23s | Reward: 0.4609 | ..."
+        reward_pattern = r"Reward: ([0-9.]+)"
         reward_matches = re.findall(reward_pattern, text)
         if reward_matches:
             metrics["reward_mean"] = float(reward_matches[-1])
 
-    # Try to parse trainer logs for loss
+    # Try to parse trainer logs for loss and steps
+    # Format: "Step 19 | Time: 20.28s | Loss: -0.0002 | ... | Peak Mem.: 11.3 GiB"
     trainer_log = log_dir / "trainer.stdout"
     if trainer_log.exists():
         text = trainer_log.read_text(errors="replace")
-        loss_pattern = r"loss[:\s]+([0-9.]+)"
+        loss_pattern = r"Loss: ([0-9.e+-]+)"
         loss_matches = re.findall(loss_pattern, text)
         if loss_matches:
             metrics["final_loss"] = float(loss_matches[-1])
 
-        step_pattern = r"step[:\s]+(\d+)"
+        step_pattern = r"Step (\d+)"
         step_matches = re.findall(step_pattern, text)
         if step_matches:
             metrics["num_steps"] = int(step_matches[-1])
+
+        mem_pattern = r"Peak Mem\.: ([0-9.]+) GiB"
+        mem_matches = re.findall(mem_pattern, text)
+        if mem_matches:
+            metrics["peak_mem_gib"] = float(mem_matches[-1])
 
     return metrics
 

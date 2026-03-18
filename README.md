@@ -33,13 +33,16 @@ By design, training runs for a **fixed 10-minute time budget**. The metric is **
 # 1. Install uv (if you don't already have it)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Install dependencies
+# 2. Install dependencies (includes prime-rl, verifiers, vllm, torch)
 uv sync
 
-# 3. One-time setup (download model, verify GPUs)
+# 3. Install flash-attn (required by prime-rl trainer, needs CUDA toolkit)
+uv sync --extra flash-attn
+
+# 4. One-time setup (download model, verify GPUs)
 uv run prepare.py
 
-# 4. Run a single experiment (~12 min)
+# 5. Run a single experiment (~10 min)
 uv run run.py
 ```
 
